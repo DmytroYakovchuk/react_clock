@@ -1,109 +1,48 @@
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
 import './App.scss';
 import { Clock } from './components/Clock';
 
-function getRandomName(): string {
+function getClockName(): string {
   return `Clock-${String(Date.now()).slice(-4)}`;
 }
 
 type State = {
-  today: Date;
-  clockName: string;
   hasClock: boolean;
+  clockName: string;
 };
 
-export class App extends React.Component<PropsWithChildren, State> {
+export class App extends React.Component<{}, State> {
   state: State = {
-    today: new Date(),
-    clockName: 'Clock-0',
     hasClock: true,
-  };
-
-  timerToday: ReturnType<typeof setInterval> | null = null;
-
-  timerName: ReturnType<typeof setInterval> | null = null;
-
-  get time(): string {
-    return this.state.today.toUTCString().slice(-12, -4);
-  }
-
-  startTodayTimer() {
-    this.timerToday = window.setInterval(() => {
-      this.setState({ today: new Date() }, () => {
-        if (this.state.hasClock) {
-          // eslint-disable-next-line no-console
-          console.log(this.time);
-        }
-      });
-    }, 1000);
-  }
-
-  stopTodayTimer() {
-    if (this.timerToday) {
-      clearInterval(this.timerToday);
-      this.timerToday = null;
-    }
-  }
-
-  handleContextMenu = (event: MouseEvent): void => {
-    event.preventDefault();
-    this.stopTodayTimer();
-    this.setState({ hasClock: false });
-  };
-
-  handleClick = (): void => {
-    if (!this.state.hasClock) {
-      this.setState(
-        {
-          hasClock: true,
-          today: new Date(),
-        },
-        () => {
-          this.startTodayTimer();
-        },
-      );
-    }
+    clockName: 'Clock-0',
   };
 
   componentDidMount(): void {
     document.addEventListener('contextmenu', this.handleContextMenu);
     document.addEventListener('click', this.handleClick);
 
-    this.startTodayTimer();
-
-    this.timerName = window.setInterval(() => {
-      this.setState({ clockName: getRandomName() });
+    setInterval(() => {
+      this.setState({ clockName: getClockName() });
     }, 3300);
   }
 
-  componentDidUpdate(_: PropsWithChildren, prevState: State): void {
-    if (prevState.clockName !== this.state.clockName && this.state.hasClock) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `Renamed from ${prevState.clockName} to ${this.state.clockName}`,
-      );
-    }
-  }
+  handleContextMenu = (event: MouseEvent): void => {
+    event.preventDefault();
+    this.setState({ hasClock: false });
+  };
 
-  componentWillUnmount(): void {
-    this.stopTodayTimer();
-
-    if (this.timerName) {
-      clearInterval(this.timerName);
-    }
-
-    document.removeEventListener('contextmenu', this.handleContextMenu);
-    document.removeEventListener('click', this.handleClick);
-  }
+  handleClick = (): void => {
+    this.setState({ hasClock: true });
+  };
 
   render(): React.ReactNode {
-    const { hasClock: showClock, clockName } = this.state;
+    const { hasClock, clockName } = this.state;
 
     return (
       <div className="App">
         <h1>React clock</h1>
 
-        {showClock && <Clock name={clockName} time={this.time} />}
+        {hasClock && <Clock name={clockName} />}
       </div>
     );
   }
